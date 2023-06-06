@@ -26,10 +26,33 @@ import operator
 import random
 import re
 import sys
-from typing import Protocol, Self, TypeVar
+from typing import Protocol, Self, TypeVar, TYPE_CHECKING
 
-import cffi
 
+
+
+if TYPE_CHECKING:
+
+    def ev_roll_keep_best(x: int, y: int, n: int) -> float:
+        ...
+    
+    def ev_roll_keep_worst(x: int, y: int, n: int) -> float:
+        ...
+else:
+    from cffi import FFI
+
+    ffi = FFI()
+    ffi.cdef(
+        """
+        double ev_xdy_keep_best_n(unsigned x, unsigned y, unsigned n);
+        double ev_xdy_keep_worst_n(unsigned x, unsigned y, unsigned n);
+        """
+    )
+    # TODO: wheels, etc
+    dicemath = ffi.dlopen("dicemath")
+
+    ev_roll_keep_best = dicemath.ev_xdy_keep_best_n
+    ev_roll_keep_worst = dicemath.ev_xdy_keep_worst_n
 
 __all__ = ["Expression", "DiceError"]
 
@@ -66,16 +89,12 @@ class DiceError(Exception):
         self.msg = msg
         super().__init__(msg, *args)
 
-
-# TODO: this is implemented in zig now, bind it up and make wheels.
-
-
 def fast_analytic_ev(quant: int, sides: int, low: int, high: int) -> float:
 
     if high < quant:
-        return dicemath.ev_roll_keep_best(quant, sides, high)
+        return ev_roll_keep_best(quant, sides, high)
     if low:
-        return dicemath.ev_roll_keep_worst(quant, sides, low)
+        return ev_roll_keep_worst(quant, sides, low)
 
     return quant * (sides + 1) / 2
 
