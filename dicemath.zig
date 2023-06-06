@@ -1,16 +1,12 @@
 const std = @import("std");
 
 fn binomial_coeff(n: u64, k: u64) u64 {
-    if (k == 0) {
-        return 1;
-    }
-    if (n <= k) {
-        return 0;
-    }
+    if (k == 0) return 1;
+    if (n <= k) return 0;
     return @divExact(n * binomial_coeff(n - 1, k - 1), k);
 }
 
-export fn ev_roll_xdy_keep_bestn(x: u16, y: u16, n: u16) f64 {
+export fn ev_xdy_keep_best_n(x: u16, y: u16, n: u16) f64 {
     var ret: f64 = 0;
 
     const _x = @intToFloat(f64, x);
@@ -43,7 +39,7 @@ export fn ev_roll_xdy_keep_bestn(x: u16, y: u16, n: u16) f64 {
     return ret;
 }
 
-export fn ev_roll_xdy_keep_worstn(x: u16, y: u16, n: u16) f64 {
+export fn ev_xdy_keep_worst_n(x: u16, y: u16, n: u16) f64 {
     var ret: f64 = 0;
 
     const _x = @intToFloat(f64, x);
