@@ -11,13 +11,8 @@ export fn ev_xdy_keep_best_n(x: u16, y: u16, n: u16) f64 {
 
     const _x = @intToFloat(f64, x);
     const _y = @intToFloat(f64, y);
-    const _n = @intToFloat(f64, n);
-    _ = _n;
 
     for (0..(n)) |k| {
-        var _k = @intToFloat(f64, k);
-        _ = _k;
-
         for (1..(y + 1)) |j| {
             var _j = @intToFloat(f64, j);
 
@@ -44,13 +39,8 @@ export fn ev_xdy_keep_worst_n(x: u16, y: u16, n: u16) f64 {
 
     const _x = @intToFloat(f64, x);
     const _y = @intToFloat(f64, y);
-    const _n = @intToFloat(f64, n);
-    _ = _n;
 
     for (1..(n + 1)) |k| {
-        var _k = @intToFloat(f64, k);
-        _ = _k;
-
         for (1..(y + 1)) |j| {
             var _j = @intToFloat(f64, j);
 
