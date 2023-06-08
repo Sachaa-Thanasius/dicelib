@@ -30,6 +30,9 @@ const std = @import("std");
 // # - \Big(\frac{Y-j+1}{Y}\Big)^l\Big(\frac{j-1}{Y}\Big)^{X-l}\Big)$$                     #
 // #########################################################################################
 
+// Functions must not panic.
+// Caller is assumed to potentially be utilizing user-provided data, and may not trust it.
+
 fn binomial_coeff(n: u64, k: u64) u64 {
     if (k == 0) return 1;
     if (n <= k) return 0;
@@ -39,8 +42,14 @@ fn binomial_coeff(n: u64, k: u64) u64 {
 /// x: number of dice
 /// y: sides
 /// n: number of dice to keep
+/// returns nan if the number of dice or sides of dice is greater than 100,
+/// or if the number of dice to keep exceeds the number of dice.
 export fn ev_xdy_keep_best_n(x: u16, y: u16, n: u16) f64 {
     var ret: f64 = 0;
+    // signal out with nan, we can do some math to figure out larger "safe" upper bounds at a later date
+    // for now, this protects a consumer who trusted user input too much.
+    if ((x > 100) or (y > 100) or (n > x)) return std.math.nan_f64;
+
     const _x = @intToFloat(f64, x);
     const _y = @intToFloat(f64, y);
     for (0..(n)) |k| {
@@ -63,8 +72,14 @@ export fn ev_xdy_keep_best_n(x: u16, y: u16, n: u16) f64 {
 /// x: number of dice
 /// y: sides
 /// n: number of dice to keep
+/// returns nan if the number of dice or sides of dice is greater than 100,
+/// or if the number of dice to keep exceeds the number of dice.
 export fn ev_xdy_keep_worst_n(x: u16, y: u16, n: u16) f64 {
     var ret: f64 = 0;
+    // signal out with nan, we can do some math to figure out larger "safe" upper bounds at a later date
+    // for now, this protects a consumer who trusted user input too much.
+    if ((x > 100) or (y > 100) or (n > x)) return std.math.nan_f64;
+
     const _x = @intToFloat(f64, x);
     const _y = @intToFloat(f64, y);
     for (1..(n + 1)) |k| {
