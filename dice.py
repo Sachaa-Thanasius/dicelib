@@ -79,7 +79,7 @@ ROPS: dict[OperatorType, str] = {
 
 DIE_COMPONENT_RE = re.compile(
     # 2 digit quantities of dice, and maximum 100 sides
-    r"^(?P<QUANT>[1-9][0-9]?)d(?P<SIDES>(?:100)|(?:[1-9][0-9]?))"  # #d#
+    r"^(?P<QUANT>[1-6][0-9]?)d(?P<SIDES>(?:100)|(?:[1-9][0-9]?))"  # #d#
     r"(?:(?P<KD>[v\^])(?P<KDQUANT>[1-9][0-9]{0,2}))?"  # (optional) v# or ^#
 )
 
@@ -217,6 +217,8 @@ class Expression:
 
         if isinstance(die, NumberofDice):
             n = self._current_num_dice + die.quant
+            if die.quant > 60:
+                raise DiceError("Whoops, too many dice here")
             if n > 1000:
                 raise DiceError("Whoops, too many dice here")
             self._current_num_dice = n
