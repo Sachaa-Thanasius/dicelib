@@ -36,7 +36,13 @@ const std = @import("std");
 fn binomial_coeff(n: u64, k: u64) u64 {
     if (k == 0) return 1;
     if (n <= k) return 0;
-    return @divExact(n * binomial_coeff(n - 1, k - 1), k);
+    return actual_binomial_coeff(n, @min(k, n - k));
+}
+
+fn actual_binomial_coeff(n: u64, k: u64) u64 {
+    if (k == 0) return 1;
+    if (n <= k) return 0;
+    return @divExact(n * actual_binomial_coeff(n - 1, k - 1), k);
 }
 
 /// x: number of dice
@@ -46,9 +52,22 @@ fn binomial_coeff(n: u64, k: u64) u64 {
 /// or if the number of dice to keep exceeds the number of dice.
 export fn ev_xdy_keep_best_n(x: u16, y: u16, n: u16) f64 {
     var ret: f64 = 0;
-    // signal out with nan, we can do some math to figure out larger "safe" upper bounds at a later date
-    // for now, this protects a consumer who trusted user input too much.
-    if ((x > 100) or (y > 100) or (n > x)) return std.math.nan_f64;
+    // signal out with nan if input is unsafe or unreasonable.
+    // due to the method used to calculate the binomial coefficient, the upper bound for
+    // these to be safe mathematically: x < 62, n <=x
+    // x < 62 fits all the math into u64s, and may be a desirable application bound.
+    // x < 125 can be done with u128s, but would require other changes.
+    // values of y are safe to an extremely high value beyond what I want to allow right now.
+    // Limits allowed here currently are lower than what can be done safely.
+    // If you find yourself needing values larger than this, feel free to reach out.
+    // The most dice I've seen ever needed as a single dice component in a real game is 40
+    // and that was for meteor swarm in a max level one-shot, and wasn't even a "keep n" situation.
+
+    // Note: I'm aware that llvm manages to make it work with ReleaseFast for values 5000 > x > 62
+    // I'd rather not rely on non-guranateed compiler behavior and whatever it figured out.
+    if ((x > 60) or (y > 100) or (n > x)) return std.math.nan_f64;
+    // fast special case
+    if (x == n) return @intToFloat(f64, x * (y + 1)) / 2.0;
 
     const _x = @intToFloat(f64, x);
     const _y = @intToFloat(f64, y);
@@ -61,9 +80,9 @@ export fn ev_xdy_keep_best_n(x: u16, y: u16, n: u16) f64 {
                 const bc: f64 = @intToFloat(f64, binomial_coeff(x, i));
                 const p1: f64 = std.math.pow(f64, ((_y - _j) / _y), _i) * std.math.pow(f64, (_j / _y), (_x - _i));
                 const p2: f64 = std.math.pow(f64, ((_y - _j + 1) / _y), _i) * std.math.pow(f64, ((_j - 1) / _y), _x - _i);
-                inner_sum = inner_sum + bc * (p1 - p2);
+                inner_sum += bc * (p1 - p2);
             }
-            ret = ret + _j * inner_sum;
+            ret += _j * inner_sum;
         }
     }
     return ret;
@@ -76,9 +95,22 @@ export fn ev_xdy_keep_best_n(x: u16, y: u16, n: u16) f64 {
 /// or if the number of dice to keep exceeds the number of dice.
 export fn ev_xdy_keep_worst_n(x: u16, y: u16, n: u16) f64 {
     var ret: f64 = 0;
-    // signal out with nan, we can do some math to figure out larger "safe" upper bounds at a later date
-    // for now, this protects a consumer who trusted user input too much.
-    if ((x > 100) or (y > 100) or (n > x)) return std.math.nan_f64;
+    // signal out with nan if input is unsafe or unreasonable.
+    // due to the method used to calculate the binomial coefficient, the upper bound for
+    // these to be safe mathematically: x < 62, n <=x
+    // x < 62 fits all the math into u64s, and may be a desirable application bound.
+    // x < 125 can be done with u128s, but would require other changes.
+    // values of y are safe to an extremely high value beyond what I want to allow right now.
+    // Limits allowed here currently are lower than what can be done safely.
+    // If you find yourself needing values larger than this, feel free to reach out.
+    // The most dice I've seen ever needed as a single dice component in a real game is 40
+    // and that was for meteor swarm in a max level one-shot, and wasn't even a "keep n" situation.
+
+    // Note: I'm aware that llvm manages to make it work with ReleaseFast for values 5000 > x > 62
+    // I'd rather not rely on non-guranateed compiler behavior and whatever it figured out.
+    if ((x > 60) or (y > 100) or (n > x)) return std.math.nan_f64;
+    // fast special case
+    if (x == n) return @intToFloat(f64, x * (y + 1)) / 2.0;
 
     const _x = @intToFloat(f64, x);
     const _y = @intToFloat(f64, y);
@@ -91,9 +123,9 @@ export fn ev_xdy_keep_worst_n(x: u16, y: u16, n: u16) f64 {
                 const bc: f64 = @intToFloat(f64, binomial_coeff(x, i));
                 const p1: f64 = std.math.pow(f64, ((_y - _j) / _y), _i) * std.math.pow(f64, (_j / _y), (_x - _i));
                 const p2: f64 = std.math.pow(f64, ((_y - _j + 1) / _y), _i) * std.math.pow(f64, ((_j - 1) / _y), _x - _i);
-                inner_sum = inner_sum + bc * (p1 - p2);
+                inner_sum += bc * (p1 - p2);
             }
-            ret = ret + _j * inner_sum;
+            ret += _j * inner_sum;
         }
     }
     return ret;
