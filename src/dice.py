@@ -21,38 +21,14 @@
 
 from __future__ import annotations
 
-import os
 import operator
 import random
 import re
 import sys
-from typing import Protocol, Self, TypeVar, TYPE_CHECKING
+from typing import Protocol, Self, TypeVar
 
+from _dicemathffi import ev_roll_keep_best, ev_roll_keep_worst
 
-
-
-if TYPE_CHECKING:
-
-    def ev_roll_keep_best(x: int, y: int, n: int) -> float:
-        ...
-    
-    def ev_roll_keep_worst(x: int, y: int, n: int) -> float:
-        ...
-else:
-    from cffi import FFI
-
-    ffi = FFI()
-    ffi.cdef(
-        """
-        double ev_xdy_keep_best_n(unsigned x, unsigned y, unsigned n);
-        double ev_xdy_keep_worst_n(unsigned x, unsigned y, unsigned n);
-        """
-    )
-    # TODO: wheels, etc
-    dicemath = ffi.dlopen("dicemath")
-
-    ev_roll_keep_best = dicemath.ev_xdy_keep_best_n
-    ev_roll_keep_worst = dicemath.ev_xdy_keep_worst_n
 
 __all__ = ["Expression", "DiceError"]
 
