@@ -12,8 +12,10 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-def ev_roll_keep_best(x: int, y: int, n: int, /) -> float:
-        ...
-    
-def ev_roll_keep_worst(x: int, y: int, n: int, /) -> float:
-    ...
+__version__ = "2023.11.13"
+
+from .dice import DiceError as DiceError  # noqa: PLC0414
+from .dice import Expression as Expression  # noqa: PLC0414
+from .dice import NumberofDice as NumberofDice  # noqa: PLC0414
+
+__all__ = ["DiceError", "Expression", "NumberofDice"]

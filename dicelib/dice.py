@@ -16,7 +16,7 @@
 # Dice parsing.
 # Must hold up to adversarial inputs.
 # Does not support exploding dice.
-# Logic here is contained to a seperate file intentionally.
+# Logic here is contained to a separate file intentionally.
 
 
 from __future__ import annotations
@@ -25,10 +25,10 @@ import operator
 import random
 import re
 import sys
+from collections.abc import Generator
 from typing import Protocol, Self, TypeVar
 
-from _dicemathffi import ev_roll_keep_best, ev_roll_keep_worst
-
+from ._dicemathffi import ev_roll_keep_best, ev_roll_keep_worst
 
 __all__ = ["Expression", "DiceError"]
 
@@ -38,7 +38,6 @@ _OP_T = TypeVar("_OP_T")
 
 
 class OperatorType(Protocol):
-
     def __call__(self: Self, _a: _OP_T, _b: _OP_T, /) -> _OP_T:
         ...
 
@@ -56,7 +55,7 @@ ROPS: dict[OperatorType, str] = {
 DIE_COMPONENT_RE = re.compile(
     # 2 digit quantities of dice, and maximum 100 sides
     r"^(?P<QUANT>[1-6][0-9]?)d(?P<SIDES>(?:100)|(?:[1-9][0-9]?))"  # #d#
-    r"(?:(?P<KD>[v\^])(?P<KDQUANT>[1-9][0-9]{0,2}))?"  # (optional) v# or ^#
+    r"(?:(?P<KD>[v\^])(?P<KDQUANT>[1-9][0-9]{0,2}))?",  # (optional) v# or ^#
 )
 
 
@@ -65,8 +64,8 @@ class DiceError(Exception):
         self.msg = msg
         super().__init__(msg, *args)
 
-def fast_analytic_ev(quant: int, sides: int, low: int, high: int) -> float:
 
+def fast_analytic_ev(quant: int, sides: int, low: int, high: int) -> float:
     if high < quant:
         return ev_roll_keep_best(quant, sides, high)
     if low:
@@ -82,14 +81,15 @@ def fast_roll(quant: int, sides: int, low: int, high: int) -> int:
 
 
 class NumberofDice:
-    def __init__(self, QUANT, SIDES, KD=None, KDQUANT=None):
+    def __init__(self, QUANT: str, SIDES: str, KD: str | None = None, KDQUANT: str | None = None) -> None:
         self.quant = int(QUANT)
         self.sides = int(SIDES)
 
         if KD and KDQUANT:
             mod = int(KDQUANT)
             if mod > self.quant:
-                raise DiceError("You can't keep more dice than you rolled.")
+                msg = "You can't keep more dice than you rolled."
+                raise DiceError(msg)
             self._kd_expr = f"{KD}{KDQUANT}"
             if KD == "v":
                 self.keep_low = min(mod, self.quant)
@@ -102,10 +102,10 @@ class NumberofDice:
             self.keep_low = 0
             self._kd_expr = ""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Die: {self}>"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.quant}d{self.sides}{self._kd_expr}"
 
     @property
@@ -131,7 +131,7 @@ class NumberofDice:
         return sum(choices), choices
 
     def full_verbose_roll(self) -> tuple[int, str]:
-        parts = []
+        parts: list[str] = []
         choices = random.choices(range(1, self.sides + 1), k=self.quant)
         parts.append(f"{self.quant}d{self.sides} ({', '.join(map(str, choices))})")
         if self._kd_expr:
@@ -160,56 +160,57 @@ class NumberofDice:
 
 
 def _try_die_or_int(expr: str) -> tuple[NumberofDice | int, str]:
-
     if m := DIE_COMPONENT_RE.search(expr):
-        assert m is not None, "mypy#8128"  # nosec
         return NumberofDice(**m.groupdict()), expr[m.end() :]
 
     if m := re.search(r"^[1-9][0-9]{0,2}", expr):
-        assert m is not None, "mypy#8128"  # nosec
         return int(m.group()), expr[m.end() :]
 
-    raise DiceError()
+    raise DiceError
 
 
 class Expression:
-    def __init__(self):
-        self._components = []
-        self._current_num_dice = 0
+    def __init__(self) -> None:
+        self._components: list[OperatorType | NumberofDice | int] = []
+        self._current_num_dice: int = 0
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if self._components:
-            return "<Dice Expression '%s'>" % " ".join(ROPS.get(c, str(c)) for c in self._components)
+            return "<Dice Expression '%s'>" % " ".join(ROPS.get(c, str(c)) for c in self._components)  # type: ignore # FIXME
 
-        else:
-            return "<Empty Dice Expression>"
+        return "<Empty Dice Expression>"
 
-    def __str__(self):
-        return " ".join(ROPS.get(c, str(c)) for c in self._components)
+    def __str__(self) -> str:
+        return " ".join(ROPS.get(c, str(c)) for c in self._components)  #  type: ignore # FIXME
 
-    def add_dice(self, die: NumberofDice | int):
+    def add_dice(self, die: NumberofDice | int) -> None:
         if len(self._components) % 2:
-            raise DiceError(f"Expected an operator next (Current: {self})")
+            msg = f"Expected an operator next (Current: {self})"
+            raise DiceError(msg)
 
         if isinstance(die, NumberofDice):
             n = self._current_num_dice + die.quant
             if die.quant > 60:
-                raise DiceError("Whoops, too many dice here")
+                msg = "Whoops, too many dice here"
+                raise DiceError(msg)
             if n > 1000:
-                raise DiceError("Whoops, too many dice here")
+                msg = "Whoops, too many dice here"
+                raise DiceError(msg)
             self._current_num_dice = n
 
         self._components.append(die)
 
-    def add_operator(self, op: OperatorType):
+    def add_operator(self, op: OperatorType) -> None:
         if not len(self._components) % 2:
-            raise DiceError(f"Expected a number or die next (Current: {self}")
+            msg = f"Expected a number or die next (Current: {self}"
+            raise DiceError(msg)
 
         self._components.append(op)
 
     @staticmethod
-    def _group_by_dice(components: list):
-
+    def _group_by_dice(
+        components: list[OperatorType | NumberofDice | int]
+    ) -> Generator[list[OperatorType | NumberofDice | int], None, None]:
         start = 0
         for idx, component in enumerate(components):
             if isinstance(component, NumberofDice):
@@ -219,14 +220,14 @@ class Expression:
         else:
             yield components[start:]
 
-    def verbose_roll2(self):
+    def verbose_roll2(self) -> str:
         total = 0
-        parts = []
+        parts: list[str] = []
         next_operator = operator.add
 
         for group in self._group_by_dice(self._components):
             partial_total = 0
-            partial_parts = []
+            partial_parts: list[str] = []
             dice_part = ""
             op_last = False
             last_op = None
@@ -266,9 +267,9 @@ class Expression:
 
         return "\n".join(parts).strip()
 
-    def verbose_roll(self):
-        total = 0
-        parts = []
+    def verbose_roll(self) -> tuple[int, str]:
+        total: int = 0
+        parts: list[str] = []
         next_operator = operator.add
 
         partial_total = 0
@@ -298,12 +299,13 @@ class Expression:
 
         return total, " ".join(parts).strip()
 
-    def full_verbose_roll(self):
+    def full_verbose_roll(self) -> tuple[int, str]:
         if not len(self._components) % 2:
-            raise DiceError(f"Incomplete Expression: {self}")
+            msg = f"Incomplete Expression: {self}"
+            raise DiceError(msg)
 
-        total = 0
-        parts = []
+        total: int = 0
+        parts: list[str] = []
         next_operator = operator.add
 
         for component in self._components:
@@ -324,8 +326,9 @@ class Expression:
 
     def roll(self) -> int:
         if not len(self._components) % 2:
-            raise DiceError(f"Incomplete Expression: {self}")
-        total = 0
+            msg = f"Incomplete Expression: {self}"
+            raise DiceError(msg)
+        total: int = 0
         next_operator = operator.add
 
         for component in self._components:
@@ -338,9 +341,10 @@ class Expression:
 
         return total
 
-    def get_min(self):
+    def get_min(self) -> int:
         if not len(self._components) % 2:
-            raise DiceError(f"Incomplete Expression: {self}")
+            msg = f"Incomplete Expression: {self}"
+            raise DiceError(msg)
         total = 0
         next_operator = operator.add
 
@@ -355,9 +359,10 @@ class Expression:
 
         return total
 
-    def get_max(self):
+    def get_max(self) -> int:
         if not len(self._components) % 2:
-            raise DiceError(f"Incomplete Expression: {self}")
+            msg = f"Incomplete Expression: {self}"
+            raise DiceError(msg)
         total = 0
         next_operator = operator.add
 
@@ -373,21 +378,19 @@ class Expression:
         return total
 
     @classmethod
-    def from_str(cls, expr: str):
-
+    def from_str(cls: type[Self], expr: str) -> Self:
         c = 0
         obj = cls()
 
         while expr := expr.strip():
-
             if c % 2:
-
                 if op := OPS.get(expr[0], None):
                     assert op is not None, "mypy#8128"  # nosec
                     obj.add_operator(op)
                     expr = expr[1:]
                 else:
-                    raise DiceError(f"Incomplete Expression: {obj}")
+                    msg = f"Incomplete Expression: {obj}"
+                    raise DiceError(msg)
 
             else:
                 part, expr = _try_die_or_int(expr)
@@ -396,7 +399,8 @@ class Expression:
             c += 1
 
         if not (c % 2 or c):
-            raise DiceError(f"Incomplete Expression: {obj}")
+            msg = f"Incomplete Expression: {obj}"
+            raise DiceError(msg)
 
         expr = expr.strip()
 
@@ -404,7 +408,8 @@ class Expression:
 
     def get_ev(self) -> float:
         if not len(self._components) % 2:
-            raise DiceError(f"Incomplete Expression: {self}")
+            msg = f"Incomplete Expression: {self}"
+            raise DiceError(msg)
 
         total = 0
         next_operator = operator.add
