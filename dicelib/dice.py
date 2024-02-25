@@ -24,15 +24,12 @@ from __future__ import annotations
 import operator
 import random
 import re
-import sys
 from collections.abc import Generator
 from typing import Protocol, Self, TypeVar
 
 from ._dicemathffi import ev_roll_keep_best, ev_roll_keep_worst
 
 __all__ = ["Expression", "DiceError"]
-
-_USE_P = sys.maxsize > 2**32
 
 _OP_T = TypeVar("_OP_T")
 
@@ -385,7 +382,6 @@ class Expression:
         while expr := expr.strip():
             if c % 2:
                 if op := OPS.get(expr[0], None):
-                    assert op is not None, "mypy#8128"  # nosec
                     obj.add_operator(op)
                     expr = expr[1:]
                 else:

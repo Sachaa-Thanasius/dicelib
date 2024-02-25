@@ -14,8 +14,6 @@
 
 __version__ = "2023.11.13"
 
-from .dice import DiceError as DiceError  # noqa: PLC0414
-from .dice import Expression as Expression  # noqa: PLC0414
-from .dice import NumberofDice as NumberofDice  # noqa: PLC0414
+from .dice import DiceError, Expression, NumberofDice
 
 __all__ = ["DiceError", "Expression", "NumberofDice"]

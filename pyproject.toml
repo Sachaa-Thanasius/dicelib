@@ -55,7 +55,7 @@ select = [
     "INP",
     "PIE",
     "T20",
-    "Q003",
+    "PYI",
     "RSE",
     "RET",
     "SIM",
@@ -63,9 +63,7 @@ select = [
     "PTH",
     "ERA",
     "PD",
-    "PLC",
-    "PLE",
-    "PLW",
+    "PL",
     "TRY",
     "NPY",
     "RUF",
@@ -80,20 +78,27 @@ extend-ignore = [
     "ANN204",  # special method return types are implied
     "PLR0913", # number of function arguments
     "UP007",   # "Use | For Union" doesn't account for typevar tuple unpacking.
-    "PTH123",  # `open()` should be replaced by `Path.open()`
-    "S311",    # Nothing about the RNG in this needs to be cryptographically secure.
+    "S311",    # secrets isn't needed for this random generation.
+    "PD011",   # Erroneous issue that triggers for any .values attribute access at all.
     "PLR",     # more complexity things
-    "COM812",  # reccomended by ruff when using ruff format
-    "COM819",  # reccomended by ruff when using ruff format
-    "E501",    # reccomended by ruff when using ruff format
-    "ISC001",  # reccomended by ruff when using ruff format
-    "Q003",    # reccomended by ruff when using ruff format
+    # Recommended by ruff when using ruff format.
+    "E111",
+    "E114",
+    "E117",
+    "Q003",
+    "COM812",
+    "COM819",
+    # "E501",
+    "ISC001",
+    "ISC002",
 ]
 unfixable = [
     "ERA", # I don't want anything erroneously detected deleted by this.
 ]
 
 [tool.ruff.per-file-ignores]
+# Init files are allowed to rexport names.
+"__init__.py" = ["PLC0414"]
 # Tests can use magic values, assertions, and relative imports
 "tests/**/*" = ["PLR2004", "S101", "TID252"]
 

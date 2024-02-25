@@ -30,8 +30,9 @@ base_bin_path = pathlib.Path(__file__).parent.joinpath("include")
 
 if sys.platform == "win32":
     windows_path = str(base_bin_path.joinpath("win/x86_64/dicemath.dll").resolve())
-    print(windows_path)
     dicemath = ffi.dlopen(windows_path)
+else:
+    dicemath = ffi.dlopen("dicemath.dll")
 
 ev_roll_keep_best = dicemath.ev_xdy_keep_best_n  # type: ignore
 ev_roll_keep_worst = dicemath.ev_xdy_keep_worst_n  # type: ignore
