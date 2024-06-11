@@ -65,7 +65,7 @@ export fn ev_xdy_keep_best_n(x: u16, y: u16, n: u16) f64 {
 
     // Note: I'm aware that llvm manages to make it work with ReleaseFast for values 5000 > x > 62
     // I'd rather not rely on non-guranateed compiler behavior and whatever it figured out.
-    if ((x > 60) or (y > 100) or (n > x)) return std.math.nan_f64;
+    if ((x > 60) or (y > 100) or (n > x)) return std.math.nan(f64);
     // fast special case
     if (x == n) return @as(f64, @floatFromInt(x * (y + 1))) / 2.0;
 
@@ -108,7 +108,7 @@ export fn ev_xdy_keep_worst_n(x: u16, y: u16, n: u16) f64 {
 
     // Note: I'm aware that llvm manages to make it work with ReleaseFast for values 5000 > x > 62
     // I'd rather not rely on non-guranateed compiler behavior and whatever it figured out.
-    if ((x > 60) or (y > 100) or (n > x)) return std.math.nan_f64;
+    if ((x > 60) or (y > 100) or (n > x)) return std.math.nan(f64);
     // fast special case
 
     if (x == n) return @as(f64, @floatFromInt(x * (y + 1))) / 2.0;

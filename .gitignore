@@ -149,4 +149,5 @@ cython_debug/
 #.idea/
 
 # zig
-zig-cache/*
+zig-cache/
+zig-out/

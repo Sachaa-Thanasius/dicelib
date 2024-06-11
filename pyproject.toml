@@ -9,7 +9,6 @@ description = "Various stuff for handling dice."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
-keywords = []
 authors = [{ name = "Michael Hall", email = "michael@michaelhall.tech" }]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -20,6 +19,10 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = ["cffi"]
+# To build:
+# zig build-lib -fstrip -dynamic -O ReleaseFast -z nocopyreloc --gc-sections -fno-allow-shlib-undefined
+# -fno-formatted-panics -fPIC -fPIE -freference-trace -fno-unwind-tables -Bsymbolic -fno-emit-implib 
+# -fbuiltin -fno-single-threaded .\dicelib\dicemath.zig -target x86_64-windows-gnu
 
 [project.urls]
 Documentation = "https://github.com/mikeshardmind/dicelib#readme"
@@ -99,7 +102,7 @@ unfixable = [
 [tool.ruff.per-file-ignores]
 # Init files are allowed to rexport names.
 "__init__.py" = ["PLC0414"]
-# Tests can use magic values, assertions, and relative imports
+# Tests can use magic values, assertions, and relative imports.
 "tests/**/*" = ["PLR2004", "S101", "TID252"]
 
 [tool.pyright]

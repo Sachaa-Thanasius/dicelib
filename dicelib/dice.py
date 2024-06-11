@@ -214,8 +214,8 @@ class Expression:
                 if start != idx:
                     yield components[start:idx]
                 start = idx
-        else:
-            yield components[start:]
+
+        yield components[start:]
 
     def verbose_roll2(self) -> str:
         total = 0
@@ -290,9 +290,9 @@ class Expression:
             else:
                 next_operator = component
                 parts.append(f"{ROPS[next_operator]}")
-        else:
-            if partial_total:
-                parts.append(f"({partial_total})")
+
+        if partial_total:
+            parts.append(f"({partial_total})")
 
         return total, " ".join(parts).strip()
 
